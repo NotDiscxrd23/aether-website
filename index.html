@@ -100,6 +100,10 @@
             color: var(--text-main);
         }
 
+        .nav-links a.active {
+            color: var(--text-main);
+        }
+
         /* =========================================
            LAYOUT & TYPOGRAPHY
            ========================================= */
@@ -407,6 +411,137 @@
         }
 
         /* =========================================
+           TABS
+           ========================================= */
+        .tab-bar {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px;
+            margin: 0 auto 72px;
+            width: fit-content;
+            max-width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .tab-bar::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            padding: 10px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.3s ease, background 0.3s ease;
+        }
+
+        .tab-btn:hover { color: var(--text-main); }
+
+        .tab-btn.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-stage { padding-bottom: 60px; }
+
+        .tab-panel { display: none; }
+
+        .tab-panel.active { display: block; }
+
+        /* =========================================
+           COPY SCRIPT
+           ========================================= */
+        .script-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .script-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .script-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .script-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn {
+            appearance: none;
+            border: 0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            background: var(--accent-blue);
+            padding: 10px 22px;
+            border-radius: 999px;
+            transition: transform 0.2s ease, background 0.3s ease;
+        }
+
+        .copy-btn:hover { transform: translateY(-1px); }
+
+        .copy-btn.copied { background: #30d158; }
+
+        .script-code {
+            margin: 0;
+            padding: 24px;
+            max-height: 460px;
+            overflow: auto;
+            background: #0d0d0d;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.7;
+            color: #d4d4d4;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .script-code::-webkit-scrollbar { width: 10px; height: 10px; }
+        .script-code::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+            border-radius: 999px;
+        }
+
+        .script-note {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        /* =========================================
            FOOTER
            ========================================= */
         footer {
@@ -432,6 +567,11 @@
             transform: translateY(0);
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .fade-up { transition: none; opacity: 1; transform: none; }
+        }
+
         /* =========================================
            RESPONSIVE
            ========================================= */
@@ -441,6 +581,15 @@
             .bento-grid { grid-template-columns: 1fr; }
             .bento-card.large { grid-column: span 1; }
             section { padding: 80px 0; }
+            .hero { min-height: 62vh; }
+            .tab-bar {
+                justify-content: flex-start;
+                width: 100%;
+                margin-bottom: 48px;
+            }
+            .tab-btn { padding: 10px 16px; font-size: 13px; }
+            .script-head { padding: 14px 16px; }
+            .script-code { padding: 16px; max-height: 380px; }
         }
     </style>
 </head>
@@ -451,10 +600,11 @@
         <div class="nav-inner">
             <div class="nav-logo">Aether</div>
             <ul class="nav-links">
-                <li><a href="#overview">Overview</a></li>
-                <li><a href="#executor">Executor Guide</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#overview" data-tab="overview">Overview</a></li>
+                <li><a href="#executor" data-tab="executor">Executor Guide</a></li>
+                <li><a href="#features" data-tab="features">Features</a></li>
+                <li><a href="#architecture" data-tab="architecture">Architecture</a></li>
+                <li><a href="#script" data-tab="script">Copy Script</a></li>
             </ul>
         </div>
     </nav>
@@ -465,166 +615,199 @@
         <p class="subtitle fade-up">The ultimate Roblox experience. Redesigned from the ground up for precision, visibility, and control.</p>
     </header>
 
-    <!-- OVERVIEW SECTION -->
-    <section id="overview" class="container">
-        <h2 class="fade-up">Power at your fingertips.</h2>
-        <p class="section-desc fade-up">Aether combines a silent aim engine, advanced ESP visuals, and a custom glassmorphism UI into one seamless Lua script. It intercepts game mechanics locally to provide visual overlays and automated aiming without modifying server data.</p>
-    </section>
-
-    <!-- EXECUTOR GUIDE SECTION -->
-    <section id="executor" class="container">
-        <h2 class="fade-up">Where to run it.</h2>
-        <p class="section-desc fade-up">Aether requires a modern Luau executor environment like <strong>Project Real</strong>. Below is the exact workflow and interface mapping showing you where to paste and execute the code.</p>
-        
-        <div class="executor-layout fade-up">
-            <!-- Visual Mockup of Project Real -->
-            <div class="executor-image-container">
-                <div class="mock-titlebar">
-                    <div class="mock-dot r"></div>
-                    <div class="mock-dot y"></div>
-                    <div class="mock-dot g"></div>
-                </div>
-                <div class="mock-body">
-                    <div class="mock-sidebar">
-                        <div class="mock-icon active" title="Editor"></div>
-                        <div class="mock-icon" title="Script Hub"></div>
-                        <div class="mock-icon" title="Accounts"></div>
-                    </div>
-                    <div class="mock-editor">
-                        <div><span class="mock-line-num">1</span><span class="mock-cm">--[[ AETHER SCRIPT ]]</span></div>
-                        <div><span class="mock-line-num">2</span><span class="mock-kw">local</span> Players = game:GetService(<span class="mock-str">"Players"</span>)</div>
-                        <div><span class="mock-line-num">3</span><span class="mock-kw">local</span> Config = { AimEnabled = <span class="mock-kw">true</span> }</div>
-                        <div><span class="mock-line-num">4</span></div>
-                        <div><span class="mock-line-num">5</span><span class="mock-kw">local function</span> InstallHook() ...</div>
-                    </div>
-                </div>
-                <div class="mock-toolbar">
-                    <div class="mock-btn sec">Attach</div>
-                    <div class="mock-btn">Execute</div>
-                    <div class="mock-btn sec">Clear</div>
-                </div>
-                
-                <!-- Pointers -->
-                <div class="pointer ptr-1">Paste Aether Code Here</div>
-                <div class="pointer ptr-2">Click Execute After Attaching</div>
-            </div>
-
-            <!-- Step by Step Instructions -->
-            <div>
-                <ul class="steps-list">
-                    <li class="step-item">
-                        <div class="step-num">1</div>
-                        <div class="step-content">
-                            <h4>Launch the Executor</h4>
-                            <p>Open Project Real (or your preferred supported executor) and ensure the target Roblox client is running.</p>
-                        </div>
-                    </li>
-                    <li class="step-item">
-                        <div class="step-num">2</div>
-                        <div class="step-content">
-                            <h4>Navigate to the Editor</h4>
-                            <p>Click the Editor icon in the left sidebar (highlighted in blue). This opens the Monaco-based code workspace.</p>
-                        </div>
-                    </li>
-                    <li class="step-item">
-                        <div class="step-num">3</div>
-                        <div class="step-content">
-                            <h4>Paste the Aether Script</h4>
-                            <p>Copy the entire Lua source code provided earlier and paste it directly into the main editor window.</p>
-                        </div>
-                    </li>
-                    <li class="step-item">
-                        <div class="step-num">4</div>
-                        <div class="step-content">
-                            <h4>Attach & Execute</h4>
-                            <p>Click <strong>"Attach"</strong> to inject the environment into the Roblox process. Once attached, click <strong>"Execute"</strong> to run the script. The Aether UI will appear on screen.</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+    <!-- TABBED CONTENT -->
+    <main class="container tab-stage">
+        <div class="tab-bar" role="tablist" aria-label="Aether sections">
+            <button class="tab-btn active" role="tab" type="button" id="tabbtn-overview" data-tab="overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-executor" data-tab="executor" aria-controls="panel-executor" aria-selected="false">Executor Guide</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-features" data-tab="features" aria-controls="panel-features" aria-selected="false">Features</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-architecture" data-tab="architecture" aria-controls="panel-architecture" aria-selected="false">Architecture</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-script" data-tab="script" aria-controls="panel-script" aria-selected="false">Copy Script</button>
         </div>
-    </section>
 
-    <!-- FEATURES SECTION -->
-    <section id="features" class="container">
-        <h2 class="fade-up">Features that change everything.</h2>
-        <p class="section-desc fade-up">Every system engineered for maximum efficiency and minimal footprint.</p>
+        <!-- OVERVIEW -->
+        <section id="overview" class="tab-panel active" role="tabpanel" aria-labelledby="tabbtn-overview" tabindex="0">
+            <h2 class="fade-up">Power at your fingertips.</h2>
+            <p class="section-desc fade-up">Aether combines a silent aim engine, advanced ESP visuals, and a custom glassmorphism UI into one seamless Lua script. It intercepts game mechanics locally to provide visual overlays and automated aiming without modifying server data.</p>
+        </section>
 
-        <div class="bento-grid">
-            <div class="bento-card fade-up">
-                <div class="glow glow-red"></div>
-                <h3>Silent Aim</h3>
-                <p>Intercepts raycasts at the metatable level (<code>__namecall</code>). Zero recoil. It redirects weapon trajectories locally without touching your camera's CFrame.</p>
-            </div>
-            <div class="bento-card fade-up">
-                <div class="glow"></div>
-                <h3>Advanced ESP</h3>
-                <p>3D Boxes, Skeletons, Tracers, and Health bars drawn natively using the <code>Drawing</code> API. Updates dynamically via RenderStepped loops.</p>
-            </div>
-            <div class="bento-card fade-up">
-                <div class="glow glow-purple"></div>
-                <h3>Camera Freeze</h3>
-                <p>Locks your camera CFrame in place while your character continues to move. Uses a dedicated watchdog to prevent the game from resetting the camera type.</p>
-            </div>
-            <div class="bento-card fade-up">
-                <div class="glow glow-green"></div>
-                <h3>Glassmorphism UI</h3>
-                <p>A fully custom, draggable interface built entirely from Roblox Instances. Features tabs, sliders, dropdowns, keybind catchers, and TweenService animations.</p>
-            </div>
-            <div class="bento-card large fade-up">
-                <h3>Smart Target Caching</h3>
-                <p>Aether doesn't scan every frame. It intelligently caches valid targets every 0.1 seconds, filtering out dead players, teammates, and invalid models. This ensures CPU usage remains low while maintaining perfect target selection based on screen distance.</p>
-            </div>
-        </div>
-    </section>
+        <!-- EXECUTOR GUIDE -->
+        <section id="executor" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-executor" tabindex="0">
+            <h2 class="fade-up">Where to run it.</h2>
+            <p class="section-desc fade-up">Aether requires a modern Luau executor environment like <strong>Project Real</strong>. Below is the exact workflow and interface mapping showing you where to paste and execute the code.</p>
 
-    <!-- ARCHITECTURE SECTION -->
-    <section id="architecture" class="container">
-        <h2 class="fade-up">Under the hood.</h2>
-        <p class="section-desc fade-up">How the Lua architecture is structured. A breakdown of the script's internal modules.</p>
+            <div class="executor-layout fade-up">
+                <!-- Visual Mockup of Project Real -->
+                <div class="executor-image-container">
+                    <div class="mock-titlebar">
+                        <div class="mock-dot r"></div>
+                        <div class="mock-dot y"></div>
+                        <div class="mock-dot g"></div>
+                    </div>
+                    <div class="mock-body">
+                        <div class="mock-sidebar">
+                            <div class="mock-icon active" title="Editor"></div>
+                            <div class="mock-icon" title="Script Hub"></div>
+                            <div class="mock-icon" title="Accounts"></div>
+                        </div>
+                        <div class="mock-editor">
+                            <div><span class="mock-line-num">1</span><span class="mock-cm">--[[ AETHER SCRIPT ]]</span></div>
+                            <div><span class="mock-line-num">2</span><span class="mock-kw">local</span> Players = game:GetService(<span class="mock-str">"Players"</span>)</div>
+                            <div><span class="mock-line-num">3</span><span class="mock-kw">local</span> Config = { AimEnabled = <span class="mock-kw">true</span> }</div>
+                            <div><span class="mock-line-num">4</span></div>
+                            <div><span class="mock-line-num">5</span><span class="mock-kw">local function</span> InstallHook() ...</div>
+                        </div>
+                    </div>
+                    <div class="mock-toolbar">
+                        <div class="mock-btn sec">Attach</div>
+                        <div class="mock-btn">Execute</div>
+                        <div class="mock-btn sec">Clear</div>
+                    </div>
 
-        <table class="arch-table fade-up">
-            <thead>
-                <tr>
-                    <th>Module</th>
-                    <th>Functionality</th>
-                    <th>Technical Implementation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Services & State</strong></td>
-                    <td>Initializes core variables and configurations.</td>
-                    <td>Calls <code>game:GetService()</code> and builds a centralized <code>Config</code> table to store user preferences dynamically.</td>
-                </tr>
-                <tr>
-                    <td><strong>The Hook</strong></td>
-                    <td>Redirects weapon fire toward targets.</td>
-                    <td>Uses <code>getrawmetatable(game)</code> to intercept <code>__namecall</code>. Filters specifically for Raycast calls originating from weapons, ignoring camera raycasts.</td>
-                </tr>
-                <tr>
-                    <td><strong>ESP Engine</strong></td>
-                    <td>Renders visual overlays over players.</td>
-                    <td>Converts 3D world positions to 2D screen coordinates using <code>WorldToViewportPoint</code>, then updates <code>Drawing.new()</code> objects every frame.</td>
-                </tr>
-                <tr>
-                    <td><strong>UI Builder</strong></td>
-                    <td>Generates the interactive menu.</td>
-                    <td>Programmatically creates <code>ScreenGui</code>, <code>ScrollingFrame</code>, and binds events. Uses <code>TweenService</code> for smooth transitions.</td>
-                </tr>
-                <tr>
-                    <td><strong>Main Loop</strong></td>
-                    <td>Keeps systems synchronized.</td>
-                    <td>A <code>RunService.RenderStepped</code> connection runs continuously to update target selection, ESP drawings, FOV circles, and FPS counters.</td>
-                </tr>
-                <tr>
-                    <td><strong>Unload System</strong></td>
-                    <td>Cleans up memory when closed.</td>
-                    <td>Disconnects all event listeners, destroys GUI instances, removes Drawing objects, and restores the original metatable to prevent crashes.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
+                    <!-- Pointers -->
+                    <div class="pointer ptr-1">Paste Aether Code Here</div>
+                    <div class="pointer ptr-2">Click Execute After Attaching</div>
+                </div>
+
+                <!-- Step by Step Instructions -->
+                <div>
+                    <ul class="steps-list">
+                        <li class="step-item">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Launch the Executor</h4>
+                                <p>Open Project Real (or your preferred supported executor) and ensure the target Roblox client is running.</p>
+                            </div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Navigate to the Editor</h4>
+                                <p>Click the Editor icon in the left sidebar (highlighted in blue). This opens the Monaco-based code workspace.</p>
+                            </div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Paste the Aether Script</h4>
+                                <p>Copy the entire Lua source code provided earlier and paste it directly into the main editor window.</p>
+                            </div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Attach &amp; Execute</h4>
+                                <p>Click <strong>"Attach"</strong> to inject the environment into the Roblox process. Once attached, click <strong>"Execute"</strong> to run the script. The Aether UI will appear on screen.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section id="features" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-features" tabindex="0">
+            <h2 class="fade-up">Features that change everything.</h2>
+            <p class="section-desc fade-up">Every system engineered for maximum efficiency and minimal footprint.</p>
+
+            <div class="bento-grid">
+                <div class="bento-card fade-up">
+                    <div class="glow glow-red"></div>
+                    <h3>Silent Aim</h3>
+                    <p>Intercepts raycasts at the metatable level (<code>__namecall</code>). Zero recoil. It redirects weapon trajectories locally without touching your camera's CFrame.</p>
+                </div>
+                <div class="bento-card fade-up">
+                    <div class="glow"></div>
+                    <h3>Advanced ESP</h3>
+                    <p>3D Boxes, Skeletons, Tracers, and Health bars drawn natively using the <code>Drawing</code> API. Updates dynamically via RenderStepped loops.</p>
+                </div>
+                <div class="bento-card fade-up">
+                    <div class="glow glow-purple"></div>
+                    <h3>Camera Freeze</h3>
+                    <p>Locks your camera CFrame in place while your character continues to move. Uses a dedicated watchdog to prevent the game from resetting the camera type.</p>
+                </div>
+                <div class="bento-card fade-up">
+                    <div class="glow glow-green"></div>
+                    <h3>Glassmorphism UI</h3>
+                    <p>A fully custom, draggable interface built entirely from Roblox Instances. Features tabs, sliders, dropdowns, keybind catchers, and TweenService animations.</p>
+                </div>
+                <div class="bento-card large fade-up">
+                    <h3>Smart Target Caching</h3>
+                    <p>Aether doesn't scan every frame. It intelligently caches valid targets every 0.1 seconds, filtering out dead players, teammates, and invalid models. This ensures CPU usage remains low while maintaining perfect target selection based on screen distance.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ARCHITECTURE -->
+        <section id="architecture" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-architecture" tabindex="0">
+            <h2 class="fade-up">Under the hood.</h2>
+            <p class="section-desc fade-up">How the Lua architecture is structured. A breakdown of the script's internal modules.</p>
+
+            <table class="arch-table fade-up">
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Functionality</th>
+                        <th>Technical Implementation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Services &amp; State</strong></td>
+                        <td>Initializes core variables and configurations.</td>
+                        <td>Calls <code>game:GetService()</code> and builds a centralized <code>Config</code> table to store user preferences dynamically.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>The Hook</strong></td>
+                        <td>Redirects weapon fire toward targets.</td>
+                        <td>Uses <code>getrawmetatable(game)</code> to intercept <code>__namecall</code>. Filters specifically for Raycast calls originating from weapons, ignoring camera raycasts.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ESP Engine</strong></td>
+                        <td>Renders visual overlays over players.</td>
+                        <td>Converts 3D world positions to 2D screen coordinates using <code>WorldToViewportPoint</code>, then updates <code>Drawing.new()</code> objects every frame.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UI Builder</strong></td>
+                        <td>Generates the interactive menu.</td>
+                        <td>Programmatically creates <code>ScreenGui</code>, <code>ScrollingFrame</code>, and binds events. Uses <code>TweenService</code> for smooth transitions.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Main Loop</strong></td>
+                        <td>Keeps systems synchronized.</td>
+                        <td>A <code>RunService.RenderStepped</code> connection runs continuously to update target selection, ESP drawings, FOV circles, and FPS counters.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unload System</strong></td>
+                        <td>Cleans up memory when closed.</td>
+                        <td>Disconnects all event listeners, destroys GUI instances, removes Drawing objects, and restores the original metatable to prevent crashes.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- COPY SCRIPT -->
+        <section id="script" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-script" tabindex="0">
+            <h2 class="fade-up">Copy the script.</h2>
+            <p class="section-desc fade-up">The full obfuscated Aether payload. Hit copy, paste it into the executor editor, then attach and execute.</p>
+
+            <div class="script-card fade-up">
+                <div class="script-head">
+                    <div class="script-meta">
+                        <span>aether obfuscated.lua</span>
+                        <span id="scriptStats">loading…</span>
+                    </div>
+                    <div class="script-actions">
+                        <button class="copy-btn" type="button" id="copyBtn">Copy Script</button>
+                    </div>
+                </div>
+                <pre class="script-code" id="scriptCode" tabindex="0"></pre>
+            </div>
+
+            <p class="script-note fade-up">Obfuscated Lua source. Keep it exactly as-is — reformatting breaks the VM wrapper.</p>
+        </section>
+
+    </main>
 
     <!-- FOOTER -->
     <footer class="container">
@@ -632,28 +815,157 @@
         <p style="margin-top: 8px; opacity: 0.6;">This page is a technical breakdown. Modifying game memory violates platform Terms of Service.</p>
     </footer>
 
-    <!-- JAVASCRIPT FOR SCROLL ANIMATIONS -->
+    <!-- RAW SCRIPT SOURCE (not executed, read-only) -->
+    <script type="text/plain" id="scriptSource">/*__AETHER_LUA__*/</script>
+
+    <!-- JAVASCRIPT: TABS, ANIMATIONS, COPY -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const observerOptions = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.1
-            };
+            /* ---------- Tab switching ---------- */
+            const tabBtns = Array.from(document.querySelectorAll(".tab-btn"));
+            const navLinks = Array.from(document.querySelectorAll(".nav-links a[data-tab]"));
+            const panels = Array.from(document.querySelectorAll(".tab-panel"));
+            const tabBar = document.querySelector(".tab-bar");
 
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        // Optional: unobserve after animation to save performance
-                        // observer.unobserve(entry.target);
+            function reveal(el) {
+                el.classList.add("visible");
+            }
+
+            function activateTab(name, opts) {
+                const options = opts || {};
+                const panel = document.getElementById("panel-" + name) || document.getElementById("" + name);
+                if (!panel) return;
+
+                panels.forEach((p) => p.classList.toggle("active", p === panel));
+
+                tabBtns.forEach((b) => {
+                    const on = b.dataset.tab === name;
+                    b.classList.toggle("active", on);
+                    b.setAttribute("aria-selected", on ? "true" : "false");
+                });
+
+                navLinks.forEach((a) => a.classList.toggle("active", a.dataset.tab === name));
+
+                // Reveal every fade-up node inside the freshly shown panel
+                panel.querySelectorAll(".fade-up").forEach((el, i) => {
+                    el.classList.remove("visible");
+                    void el.offsetWidth;
+                    setTimeout(() => reveal(el), 40 * i);
+                });
+                panel.querySelectorAll(".fade-up").forEach(revealIfVisible);
+
+                if (options.scroll !== false) {
+                    const top = (tabBar || panel).getBoundingClientRect().top + window.pageYOffset - 100;
+                    window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+                }
+
+                if (options.updateHash !== false) {
+                    history.replaceState(null, "", "#" + name);
+                }
+            }
+
+            /* ---------- Animate on scroll (hero + active panel) ---------- */
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) reveal(entry.target);
+                });
+            }, { root: null, rootMargin: "0px", threshold: 0.1 });
+
+            document.querySelectorAll(".fade-up").forEach((el) => observer.observe(el));
+
+            function revealIfVisible() { /* placeholder, kept for clarity */ }
+
+            /* ---------- Bind tab buttons ---------- */
+            tabBtns.forEach((btn) => {
+                btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+                btn.addEventListener("keydown", (e) => {
+                    const idx = tabBtns.indexOf(btn);
+                    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                        e.preventDefault();
+                        const dir = e.key === "ArrowRight" ? 1 : -1;
+                        const next = tabBtns[(idx + dir + tabBtns.length) % tabBtns.length];
+                        next.focus();
+                        activateTab(next.dataset.tab);
                     }
                 });
-            }, observerOptions);
+            });
 
-            const elementsToAnimate = document.querySelectorAll('.fade-up');
-            elementsToAnimate.forEach(el => {
-                observer.observe(el);
+            navLinks.forEach((a) => {
+                a.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    activateTab(a.dataset.tab);
+                });
+            });
+
+            /* ---------- Deep link (#features etc.) ---------- */
+            const startTab = (location.hash || "").replace("#", "");
+            const validStarts = tabBtns.map((b) => b.dataset.tab);
+            activateTab(validStarts.includes(startTab) ? startTab : "overview", {
+                scroll: false,
+                updateHash: false
+            });
+
+            /* ---------- Script source + copy ---------- */
+            const sourceEl = document.getElementById("scriptSource");
+            const codeEl = document.getElementById("scriptCode");
+            const statsEl = document.getElementById("scriptStats");
+            const copyBtn = document.getElementById("copyBtn");
+
+            const raw = (sourceEl ? sourceEl.textContent : "").replace(/^\n+/, "").replace(/\s+$/, "");
+            codeEl.textContent = raw;
+
+            const lines = raw ? raw.split(/\r?\n/).length : 0;
+            const kb = (new Blob([raw]).size / 1024).toFixed(1);
+            statsEl.textContent = lines + (lines === 1 ? " line" : " lines") + " · " + kb + " KB";
+
+            function flashCopied() {
+                copyBtn.classList.add("copied");
+                copyBtn.textContent = "Copied";
+                setTimeout(() => {
+                    copyBtn.classList.remove("copied");
+                    copyBtn.textContent = "Copy Script";
+                }, 1800);
+            }
+
+            function legacyCopy(text) {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.setAttribute("readonly", "");
+                ta.style.position = "fixed";
+                ta.style.top = "-1000px";
+                document.body.appendChild(ta);
+                ta.select();
+                let ok = false;
+                try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+                document.body.removeChild(ta);
+                return ok;
+            }
+
+            copyBtn.addEventListener("click", async () => {
+                if (!raw) return;
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(raw);
+                        flashCopied();
+                    } else if (legacyCopy(raw)) {
+                        flashCopied();
+                    } else {
+                        copyBtn.textContent = "Select & Ctrl+C";
+                        codeEl.focus();
+                        const range = document.createRange();
+                        range.selectNodeContents(codeEl);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        setTimeout(() => { copyBtn.textContent = "Copy Script"; }, 2200);
+                    }
+                } catch (err) {
+                    if (legacyCopy(raw)) {
+                        flashCopied();
+                    } else {
+                        codeEl.focus();
+                    }
+                }
             });
         });
     </script>
