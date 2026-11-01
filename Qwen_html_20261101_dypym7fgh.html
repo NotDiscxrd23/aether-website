@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Script | Architecture & Guide</title>
+    <style>
+        /* =========================================
+           APPLE DESIGN SYSTEM TOKENS
+           ========================================= */
+        :root {
+            --bg-page: #000000;
+            --bg-card: #161617;
+            --bg-elevated: #1d1d1f;
+            --text-main: #f5f5f7;
+            --text-muted: #86868b;
+            --accent-blue: #2997ff;
+            --accent-purple: #bf5af2;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+            --nav-height: 48px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* CRITICAL FIX FOR NAVIGATION LINKS */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Ensure sections don't hide behind the fixed navbar */
+        section[id] {
+            scroll-margin-top: calc(var(--nav-height) + 20px);
+        }
+
+        /* =========================================
+           NAVIGATION
+           ========================================= */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .nav-inner {
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        /* =========================================
+           LAYOUT & TYPOGRAPHY
+           ========================================= */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: var(--nav-height);
+        }
+
+        h1 {
+            font-size: clamp(48px, 8vw, 80px);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            background: linear-gradient(to bottom, #ffffff 20%, #86868b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: clamp(18px, 2.5vw, 24px);
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            font-weight: 400;
+        }
+
+        .section-desc {
+            font-size: 18px;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 64px;
+        }
+
+        section {
+            padding: 120px 0;
+        }
+
+        /* =========================================
+           EXECUTOR GUIDE (WHERE TO USE IT)
+           ========================================= */
+        .executor-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 48px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .executor-image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1e1e1e;
+            aspect-ratio: 16/10;
+            border: 1px solid #333;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Simulating the Project Real Monaco Editor Interface */
+        .mock-titlebar {
+            height: 32px;
+            background: #2d2d2d;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            border-bottom: 1px solid #333;
+        }
+        .mock-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+        .mock-dot.r { background: #ff5f56; }
+        .mock-dot.y { background: #ffbd2e; }
+        .mock-dot.g { background: #27c93f; }
+        
+        .mock-body {
+            display: flex;
+            height: calc(100% - 32px);
+        }
+        .mock-sidebar {
+            width: 40px;
+            background: #252526;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 12px;
+            gap: 16px;
+        }
+        .mock-icon { width: 20px; height: 20px; background: #555; border-radius: 4px; }
+        .mock-icon.active { background: var(--accent-blue); }
+        
+        .mock-editor {
+            flex: 1;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #d4d4d4;
+            line-height: 1.6;
+        }
+        .mock-line-num { color: #858585; margin-right: 16px; }
+        .mock-kw { color: #569cd6; }
+        .mock-str { color: #ce9178; }
+        .mock-cm { color: #6a9955; }
+
+        .mock-toolbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #2d2d2d;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+        }
+        .mock-btn {
+            padding: 4px 12px;
+            background: #0e639c;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .mock-btn.sec { background: #3a3d41; }
+
+        /* Pointers / Annotations */
+        .pointer {
+            position: absolute;
+            background: rgba(41, 151, 255, 0.15);
+            border: 1px solid var(--accent-blue);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        .ptr-1 { top: 40%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 40px rgba(41, 151, 255, 0.1); }
+        .ptr-2 { bottom: 48px; left: 12px; box-shadow: 0 0 0 4px rgba(41, 151, 255, 0.2); }
+
+        .steps-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 16px;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(41, 151, 255, 0.1);
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* =========================================
+           BENTO GRID (FEATURES)
+           ========================================= */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .bento-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 320px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .bento-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .bento-card.large {
+            grid-column: span 2;
+            min-height: 280px;
+        }
+
+        .bento-card h3 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .bento-card p {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .glow {
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(41, 151, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .glow-purple { background: radial-gradient(circle, rgba(191, 90, 242, 0.15) 0%, transparent 70%); }
+        .glow-red { background: radial-gradient(circle, rgba(255, 69, 58, 0.15) 0%, transparent 70%); }
+        .glow-green { background: radial-gradient(circle, rgba(48, 209, 88, 0.15) 0%, transparent 70%); }
+
+        /* =========================================
+           ARCHITECTURE TABLE
+           ========================================= */
+        .arch-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .arch-table th, .arch-table td {
+            padding: 20px 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .arch-table th {
+            background: var(--bg-elevated);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .arch-table td {
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .arch-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #e5c07b;
+        }
+
+        /* =========================================
+           FOOTER
+           ========================================= */
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* =========================================
+           ANIMATIONS
+           ========================================= */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           RESPONSIVE
+           ========================================= */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .executor-layout { grid-template-columns: 1fr; padding: 24px; }
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-card.large { grid-column: span 1; }
+            section { padding: 80px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo">Aether</div>
+            <ul class="nav-links">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#executor">Executor Guide</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero container">
+        <h1 class="fade-up">Aether Script.</h1>
+        <p class="subtitle fade-up">The ultimate Roblox experience. Redesigned from the ground up for precision, visibility, and control.</p>
+    </header>
+
+    <!-- OVERVIEW SECTION -->
+    <section id="overview" class="container">
+        <h2 class="fade-up">Power at your fingertips.</h2>
+        <p class="section-desc fade-up">Aether combines a silent aim engine, advanced ESP visuals, and a custom glassmorphism UI into one seamless Lua script. It intercepts game mechanics locally to provide visual overlays and automated aiming without modifying server data.</p>
+    </section>
+
+    <!-- EXECUTOR GUIDE SECTION -->
+    <section id="executor" class="container">
+        <h2 class="fade-up">Where to run it.</h2>
+        <p class="section-desc fade-up">Aether requires a modern Luau executor environment like <strong>Project Real</strong>. Below is the exact workflow and interface mapping showing you where to paste and execute the code.</p>
+        
+        <div class="executor-layout fade-up">
+            <!-- Visual Mockup of Project Real -->
+            <div class="executor-image-container">
+                <div class="mock-titlebar">
+                    <div class="mock-dot r"></div>
+                    <div class="mock-dot y"></div>
+                    <div class="mock-dot g"></div>
+                </div>
+                <div class="mock-body">
+                    <div class="mock-sidebar">
+                        <div class="mock-icon active" title="Editor"></div>
+                        <div class="mock-icon" title="Script Hub"></div>
+                        <div class="mock-icon" title="Accounts"></div>
+                    </div>
+                    <div class="mock-editor">
+                        <div><span class="mock-line-num">1</span><span class="mock-cm">--[[ AETHER SCRIPT ]]</span></div>
+                        <div><span class="mock-line-num">2</span><span class="mock-kw">local</span> Players = game:GetService(<span class="mock-str">"Players"</span>)</div>
+                        <div><span class="mock-line-num">3</span><span class="mock-kw">local</span> Config = { AimEnabled = <span class="mock-kw">true</span> }</div>
+                        <div><span class="mock-line-num">4</span></div>
+                        <div><span class="mock-line-num">5</span><span class="mock-kw">local function</span> InstallHook() ...</div>
+                    </div>
+                </div>
+                <div class="mock-toolbar">
+                    <div class="mock-btn sec">Attach</div>
+                    <div class="mock-btn">Execute</div>
+                    <div class="mock-btn sec">Clear</div>
+                </div>
+                
+                <!-- Pointers -->
+                <div class="pointer ptr-1">Paste Aether Code Here</div>
+                <div class="pointer ptr-2">Click Execute After Attaching</div>
+            </div>
+
+            <!-- Step by Step Instructions -->
+            <div>
+                <ul class="steps-list">
+                    <li class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Launch the Executor</h4>
+                            <p>Open Project Real (or your preferred supported executor) and ensure the target Roblox client is running.</p>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Navigate to the Editor</h4>
+                            <p>Click the Editor icon in the left sidebar (highlighted in blue). This opens the Monaco-based code workspace.</p>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Paste the Aether Script</h4>
+                            <p>Copy the entire Lua source code provided earlier and paste it directly into the main editor window.</p>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>Attach & Execute</h4>
+                            <p>Click <strong>"Attach"</strong> to inject the environment into the Roblox process. Once attached, click <strong>"Execute"</strong> to run the script. The Aether UI will appear on screen.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section id="features" class="container">
+        <h2 class="fade-up">Features that change everything.</h2>
+        <p class="section-desc fade-up">Every system engineered for maximum efficiency and minimal footprint.</p>
+
+        <div class="bento-grid">
+            <div class="bento-card fade-up">
+                <div class="glow glow-red"></div>
+                <h3>Silent Aim</h3>
+                <p>Intercepts raycasts at the metatable level (<code>__namecall</code>). Zero recoil. It redirects weapon trajectories locally without touching your camera's CFrame.</p>
+            </div>
+            <div class="bento-card fade-up">
+                <div class="glow"></div>
+                <h3>Advanced ESP</h3>
+                <p>3D Boxes, Skeletons, Tracers, and Health bars drawn natively using the <code>Drawing</code> API. Updates dynamically via RenderStepped loops.</p>
+            </div>
+            <div class="bento-card fade-up">
+                <div class="glow glow-purple"></div>
+                <h3>Camera Freeze</h3>
+                <p>Locks your camera CFrame in place while your character continues to move. Uses a dedicated watchdog to prevent the game from resetting the camera type.</p>
+            </div>
+            <div class="bento-card fade-up">
+                <div class="glow glow-green"></div>
+                <h3>Glassmorphism UI</h3>
+                <p>A fully custom, draggable interface built entirely from Roblox Instances. Features tabs, sliders, dropdowns, keybind catchers, and TweenService animations.</p>
+            </div>
+            <div class="bento-card large fade-up">
+                <h3>Smart Target Caching</h3>
+                <p>Aether doesn't scan every frame. It intelligently caches valid targets every 0.1 seconds, filtering out dead players, teammates, and invalid models. This ensures CPU usage remains low while maintaining perfect target selection based on screen distance.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARCHITECTURE SECTION -->
+    <section id="architecture" class="container">
+        <h2 class="fade-up">Under the hood.</h2>
+        <p class="section-desc fade-up">How the Lua architecture is structured. A breakdown of the script's internal modules.</p>
+
+        <table class="arch-table fade-up">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Functionality</th>
+                    <th>Technical Implementation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Services & State</strong></td>
+                    <td>Initializes core variables and configurations.</td>
+                    <td>Calls <code>game:GetService()</code> and builds a centralized <code>Config</code> table to store user preferences dynamically.</td>
+                </tr>
+                <tr>
+                    <td><strong>The Hook</strong></td>
+                    <td>Redirects weapon fire toward targets.</td>
+                    <td>Uses <code>getrawmetatable(game)</code> to intercept <code>__namecall</code>. Filters specifically for Raycast calls originating from weapons, ignoring camera raycasts.</td>
+                </tr>
+                <tr>
+                    <td><strong>ESP Engine</strong></td>
+                    <td>Renders visual overlays over players.</td>
+                    <td>Converts 3D world positions to 2D screen coordinates using <code>WorldToViewportPoint</code>, then updates <code>Drawing.new()</code> objects every frame.</td>
+                </tr>
+                <tr>
+                    <td><strong>UI Builder</strong></td>
+                    <td>Generates the interactive menu.</td>
+                    <td>Programmatically creates <code>ScreenGui</code>, <code>ScrollingFrame</code>, and binds events. Uses <code>TweenService</code> for smooth transitions.</td>
+                </tr>
+                <tr>
+                    <td><strong>Main Loop</strong></td>
+                    <td>Keeps systems synchronized.</td>
+                    <td>A <code>RunService.RenderStepped</code> connection runs continuously to update target selection, ESP drawings, FOV circles, and FPS counters.</td>
+                </tr>
+                <tr>
+                    <td><strong>Unload System</strong></td>
+                    <td>Cleans up memory when closed.</td>
+                    <td>Disconnects all event listeners, destroys GUI instances, removes Drawing objects, and restores the original metatable to prevent crashes.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="container">
+        <p>Aether Script Explainer. Designed for educational and architectural analysis.</p>
+        <p style="margin-top: 8px; opacity: 0.6;">This page is a technical breakdown. Modifying game memory violates platform Terms of Service.</p>
+    </footer>
+
+    <!-- JAVASCRIPT FOR SCROLL ANIMATIONS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // Optional: unobserve after animation to save performance
+                        // observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const elementsToAnimate = document.querySelectorAll('.fade-up');
+            elementsToAnimate.forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
