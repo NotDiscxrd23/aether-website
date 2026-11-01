@@ -413,8 +413,9 @@
         /* =========================================
            TABS
            ========================================= */
+        /* Desktop: the top nav links are the tabs, so the strip stays hidden (no duplicate labels) */
         .tab-bar {
-            display: flex;
+            display: none;
             justify-content: center;
             gap: 4px;
             padding: 4px;
@@ -468,6 +469,30 @@
             border: 1px solid var(--border-subtle);
             border-radius: 24px;
             overflow: hidden;
+        }
+
+        .script-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .script-card.loadstring .script-code {
+            max-height: none;
+            white-space: pre;
+            word-break: normal;
+            color: #e5c07b;
+        }
+
+        .script-error {
+            padding: 24px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .script-error a {
+            color: var(--accent-blue);
+            text-decoration: none;
         }
 
         .script-head {
@@ -583,6 +608,7 @@
             section { padding: 80px 0; }
             .hero { min-height: 62vh; }
             .tab-bar {
+                display: flex;
                 justify-content: flex-start;
                 width: 100%;
                 margin-bottom: 48px;
@@ -618,11 +644,11 @@
     <!-- TABBED CONTENT -->
     <main class="container tab-stage">
         <div class="tab-bar" role="tablist" aria-label="Aether sections">
-            <button class="tab-btn active" role="tab" type="button" id="tabbtn-overview" data-tab="overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
-            <button class="tab-btn" role="tab" type="button" id="tabbtn-executor" data-tab="executor" aria-controls="panel-executor" aria-selected="false">Executor Guide</button>
-            <button class="tab-btn" role="tab" type="button" id="tabbtn-features" data-tab="features" aria-controls="panel-features" aria-selected="false">Features</button>
-            <button class="tab-btn" role="tab" type="button" id="tabbtn-architecture" data-tab="architecture" aria-controls="panel-architecture" aria-selected="false">Architecture</button>
-            <button class="tab-btn" role="tab" type="button" id="tabbtn-script" data-tab="script" aria-controls="panel-script" aria-selected="false">Copy Script</button>
+            <button class="tab-btn active" role="tab" type="button" id="tabbtn-overview" data-tab="overview" aria-controls="overview" aria-selected="true">Overview</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-executor" data-tab="executor" aria-controls="executor" aria-selected="false">Executor Guide</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-features" data-tab="features" aria-controls="features" aria-selected="false">Features</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-architecture" data-tab="architecture" aria-controls="architecture" aria-selected="false">Architecture</button>
+            <button class="tab-btn" role="tab" type="button" id="tabbtn-script" data-tab="script" aria-controls="script" aria-selected="false">Copy Script</button>
         </div>
 
         <!-- OVERVIEW -->
@@ -789,22 +815,37 @@
         <!-- COPY SCRIPT -->
         <section id="script" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-script" tabindex="0">
             <h2 class="fade-up">Copy the script.</h2>
-            <p class="section-desc fade-up">The full obfuscated Aether payload. Hit copy, paste it into the executor editor, then attach and execute.</p>
+            <p class="section-desc fade-up">One-line loadstring, or the full source. Paste it into the executor editor, then attach and execute.</p>
 
-            <div class="script-card fade-up">
-                <div class="script-head">
-                    <div class="script-meta">
-                        <span>aether obfuscated.lua</span>
-                        <span id="scriptStats">loading…</span>
+            <div class="script-stack">
+                <div class="script-card loadstring fade-up">
+                    <div class="script-head">
+                        <div class="script-meta">
+                            <span>loadstring</span>
+                            <span>1 line · always latest build</span>
+                        </div>
+                        <div class="script-actions">
+                            <button class="copy-btn" type="button" id="copyLoadstring" data-label="Copy Loadstring">Copy Loadstring</button>
+                        </div>
                     </div>
-                    <div class="script-actions">
-                        <button class="copy-btn" type="button" id="copyBtn">Copy Script</button>
-                    </div>
+                    <pre class="script-code" id="loadstringCode" tabindex="0">loadstring(game:HttpGet("https://raw.githubusercontent.com/NotDiscxrd23/aether-website/refs/heads/main/aether%20obfuscated.lua"))()</pre>
                 </div>
-                <pre class="script-code" id="scriptCode" tabindex="0"></pre>
+
+                <div class="script-card fade-up">
+                    <div class="script-head">
+                        <div class="script-meta">
+                            <span>aether obfuscated.lua</span>
+                            <span id="scriptStats">loading…</span>
+                        </div>
+                        <div class="script-actions">
+                            <button class="copy-btn" type="button" id="copyBtn" data-label="Copy Full Script">Copy Full Script</button>
+                        </div>
+                    </div>
+                    <pre class="script-code" id="scriptCode" tabindex="0">Loading source…</pre>
+                </div>
             </div>
 
-            <p class="script-note fade-up">Obfuscated Lua source. Keep it exactly as-is — reformatting breaks the VM wrapper.</p>
+            <p class="script-note fade-up">Loadstring pulls the current build straight from the repo. Keep the source exactly as-is — reformatting breaks the VM wrapper.</p>
         </section>
 
     </main>
@@ -815,9 +856,6 @@
         <p style="margin-top: 8px; opacity: 0.6;">This page is a technical breakdown. Modifying game memory violates platform Terms of Service.</p>
     </footer>
 
-    <!-- RAW SCRIPT SOURCE (not executed, read-only) -->
-    <script type="text/plain" id="scriptSource">/*__AETHER_LUA__*/</script>
-
     <!-- JAVASCRIPT: TABS, ANIMATIONS, COPY -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -825,7 +863,6 @@
             const tabBtns = Array.from(document.querySelectorAll(".tab-btn"));
             const navLinks = Array.from(document.querySelectorAll(".nav-links a[data-tab]"));
             const panels = Array.from(document.querySelectorAll(".tab-panel"));
-            const tabBar = document.querySelector(".tab-bar");
 
             function reveal(el) {
                 el.classList.add("visible");
@@ -852,12 +889,15 @@
                     void el.offsetWidth;
                     setTimeout(() => reveal(el), 40 * i);
                 });
-                panel.querySelectorAll(".fade-up").forEach(revealIfVisible);
 
                 if (options.scroll !== false) {
-                    const top = (tabBar || panel).getBoundingClientRect().top + window.pageYOffset - 100;
+                    const navEl = document.querySelector("nav");
+                    const navH = navEl ? navEl.offsetHeight : 0;
+                    const top = panel.getBoundingClientRect().top + window.pageYOffset - navH - 40;
                     window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
                 }
+
+                if (name === "script") loadRemoteScript();
 
                 if (options.updateHash !== false) {
                     history.replaceState(null, "", "#" + name);
@@ -872,8 +912,6 @@
             }, { root: null, rootMargin: "0px", threshold: 0.1 });
 
             document.querySelectorAll(".fade-up").forEach((el) => observer.observe(el));
-
-            function revealIfVisible() { /* placeholder, kept for clarity */ }
 
             /* ---------- Bind tab buttons ---------- */
             tabBtns.forEach((btn) => {
@@ -897,34 +935,59 @@
                 });
             });
 
-            /* ---------- Deep link (#features etc.) ---------- */
-            const startTab = (location.hash || "").replace("#", "");
-            const validStarts = tabBtns.map((b) => b.dataset.tab);
-            activateTab(validStarts.includes(startTab) ? startTab : "overview", {
-                scroll: false,
-                updateHash: false
-            });
 
             /* ---------- Script source + copy ---------- */
-            const sourceEl = document.getElementById("scriptSource");
+            const SCRIPT_URL = "https://raw.githubusercontent.com/NotDiscxrd23/aether-website/refs/heads/main/aether%20obfuscated.lua";
+            const PREVIEW_LIMIT = 20000;
+
             const codeEl = document.getElementById("scriptCode");
             const statsEl = document.getElementById("scriptStats");
-            const copyBtn = document.getElementById("copyBtn");
+            const loadstringEl = document.getElementById("loadstringCode");
 
-            const raw = (sourceEl ? sourceEl.textContent : "").replace(/^\n+/, "").replace(/\s+$/, "");
-            codeEl.textContent = raw;
+            let remoteScript = null;
+            let loadingRemote = false;
 
-            const lines = raw ? raw.split(/\r?\n/).length : 0;
-            const kb = (new Blob([raw]).size / 1024).toFixed(1);
-            statsEl.textContent = lines + (lines === 1 ? " line" : " lines") + " · " + kb + " KB";
+            function renderScript(text) {
+                const kb = (new Blob([text]).size / 1024).toFixed(1);
+                const lineCount = text.split(/\r\n|\r|\n/).length;
+                statsEl.textContent = lineCount + (lineCount === 1 ? " line" : " lines") + " · " + kb + " KB";
 
-            function flashCopied() {
-                copyBtn.classList.add("copied");
-                copyBtn.textContent = "Copied";
-                setTimeout(() => {
-                    copyBtn.classList.remove("copied");
-                    copyBtn.textContent = "Copy Script";
-                }, 1800);
+                if (text.length > PREVIEW_LIMIT) {
+                    codeEl.textContent = text.slice(0, PREVIEW_LIMIT) +
+                        "\n\n… preview capped at " + PREVIEW_LIMIT.toLocaleString() +
+                        " characters. Copy still copies all " + kb + " KB.";
+                } else {
+                    codeEl.textContent = text;
+                }
+            }
+
+            async function loadRemoteScript() {
+                if (remoteScript !== null || loadingRemote) return;
+                loadingRemote = true;
+                try {
+                    const res = await fetch(SCRIPT_URL, { cache: "no-store" });
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    const text = await res.text();
+                    if (!text.trim()) throw new Error("empty response");
+                    remoteScript = text;
+                    renderScript(remoteScript);
+                } catch (err) {
+                    remoteScript = null;
+                    codeEl.textContent = "";
+                    const msg = document.createElement("span");
+                    msg.className = "script-error";
+                    msg.textContent = "Could not load the source from GitHub (" + err.message + "). ";
+                    const link = document.createElement("a");
+                    link.href = SCRIPT_URL;
+                    link.target = "_blank";
+                    link.rel = "noopener";
+                    link.textContent = "Open the raw file instead";
+                    msg.appendChild(link);
+                    codeEl.appendChild(msg);
+                    statsEl.textContent = "unavailable";
+                } finally {
+                    loadingRemote = false;
+                }
             }
 
             function legacyCopy(text) {
@@ -941,32 +1004,80 @@
                 return ok;
             }
 
-            copyBtn.addEventListener("click", async () => {
-                if (!raw) return;
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(raw);
-                        flashCopied();
-                    } else if (legacyCopy(raw)) {
-                        flashCopied();
+            function selectAllOf(el) {
+                if (!el) return;
+                el.focus();
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+
+            function bindCopy(btn, getText, preEl) {
+                if (!btn) return;
+                const label = btn.dataset.label || btn.textContent;
+                const done = () => {
+                    btn.classList.add("copied");
+                    btn.textContent = "Copied";
+                    setTimeout(() => {
+                        btn.classList.remove("copied");
+                        btn.textContent = label;
+                    }, 1800);
+                };
+                const fallback = (text) => {
+                    if (legacyCopy(text)) {
+                        done();
                     } else {
-                        copyBtn.textContent = "Select & Ctrl+C";
-                        codeEl.focus();
-                        const range = document.createRange();
-                        range.selectNodeContents(codeEl);
-                        const sel = window.getSelection();
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        setTimeout(() => { copyBtn.textContent = "Copy Script"; }, 2200);
+                        selectAllOf(preEl);
+                        btn.textContent = "Select & Ctrl+C";
+                        setTimeout(() => { btn.textContent = label; }, 2200);
                     }
-                } catch (err) {
-                    if (legacyCopy(raw)) {
-                        flashCopied();
-                    } else {
-                        codeEl.focus();
+                };
+
+                btn.addEventListener("click", async () => {
+                    let text = "";
+                    try { text = (await getText()) || ""; } catch (err) { text = ""; }
+                    if (!text) {
+                        btn.textContent = "Nothing to copy";
+                        setTimeout(() => { btn.textContent = label; }, 1800);
+                        return;
                     }
-                }
-            });
+
+                    try {
+                        if (navigator.clipboard && window.isSecureContext) {
+                            await navigator.clipboard.writeText(text);
+                            done();
+                        } else {
+                            fallback(text);
+                        }
+                    } catch (err) {
+                        fallback(text);
+                    }
+                });
+            }
+
+            bindCopy(
+                document.getElementById("copyLoadstring"),
+                async () => (loadstringEl ? loadstringEl.textContent.trim() : ""),
+                loadstringEl
+            );
+
+            bindCopy(
+                document.getElementById("copyBtn"),
+                async () => {
+                    if (remoteScript === null) await loadRemoteScript();
+                    return remoteScript || "";
+                },
+                codeEl
+            );
+
+            /* ---------- Boot: restore deep link, preload script tab if open ---------- */
+            const startTab = (location.hash || "").replace("#", "");
+            const validStarts = tabBtns.map((b) => b.dataset.tab);
+            const initialTab = validStarts.includes(startTab) ? startTab : "overview";
+            activateTab(initialTab, { scroll: false, updateHash: false });
+            if (initialTab === "script") loadRemoteScript();
         });
     </script>
 </body>
